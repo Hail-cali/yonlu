@@ -26,7 +26,7 @@ if mode == 'en':
     df = pd.read_csv("../data/reviews.csv")
     df, class_names = add_sentiment_label(df)
 elif mode == 'kr':
-    mecab_path = 'C:\\mecab\\mecab-ko-dic'
+    mecab_path = '/home/hail09/package/mecab-0.996-ko-0.9.2/mecab-ko-dic-2.1.1-20180720'
     stopwords = '../stopwords/stopwordsKor.txt'
     input_file = '../data/ratings_test.txt'
 
@@ -43,7 +43,7 @@ elif mode == 'kr':
     result = pipeline.processCorpus(corpus)
     i = 1
     #below is just for a sample test
-    for doc in result[1:500]:
+    for doc in result[1:]:
         document = ''
         for sent in doc:
             for word in sent:
@@ -99,6 +99,8 @@ for i, (a, b) in enumerate(zip(y_test, y_pred)):
 
 #let’s have a look at an example from our test data:
 idx = 2
+class_names_ex = class_names.cpu()
+y_pred_probs[idx] = y_pred_probs[idx].cpu()
 text = y_texts[idx]
 true_sentiment = y_test[idx]
 pred_df = pd.DataFrame({

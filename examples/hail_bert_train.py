@@ -61,7 +61,7 @@ torch.manual_seed(RANDOM_SEED)
 #we need a better way of setting MAX_LEN
 
 MAX_LEN = 160
-BATCH_SIZE = 20
+BATCH_SIZE = 16
 
 #split
 df_train, df_test = train_test_split(df, test_size=0.1, random_state=RANDOM_SEED)

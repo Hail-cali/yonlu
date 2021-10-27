@@ -43,7 +43,7 @@ elif mode == 'kr':
     result = pipeline.processCorpus(corpus)
     i = 1
     #below is just for a sample test
-    for doc in result[1:500]:
+    for doc in result[1:]:
         document = ''
         for sent in doc:
             for word in sent:
@@ -76,7 +76,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #algorithm and saved_training_model goes hand-in-hand
 algorithm='transformers'
 
-saved_training_model = './model_save/best_model_state.bin'
+saved_training_model = './model_save/best_model_state_hail2_test.bin'
 
 predictor.load_model(saved_training_model)
 
@@ -99,13 +99,13 @@ for i, (a, b) in enumerate(zip(y_test, y_pred)):
 
 #let’s have a look at an example from our test data:
 idx = 2
-class_names_ex = class_names.cpu()
-y_pred_probs[idx] = y_pred_probs[idx].cpu()
+class_names_ex = class_names
+y_pred_probs_ex = y_pred_probs[idx].cpu()
 text = y_texts[idx]
 true_sentiment = y_test[idx]
 pred_df = pd.DataFrame({
   'class_names': class_names,
-  'values': y_pred_probs[idx]
+  'values': y_pred_probs_ex
 })
 print("\n".join(wrap(text)))
 print()

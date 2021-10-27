@@ -13,21 +13,28 @@ import treform as ptm
 import torch
 import numpy as np
 import pandas as pd
+import opt
 
+OPT = opt.parse_opts()
+OPT.testmode = False
 #mode is either en or kr
 mode = 'kr'
 df = None
+
+
 
 if mode == 'en':
     df = pd.read_csv("../data/reviews.csv")
     df, class_names = add_sentiment_label(df)
 elif mode == 'kr':
-    mecab_path = 'C:\\mecab\\mecab-ko-dic'
+    # mecab_path = 'C:\\mecab\\mecab-ko-dic'
+    mecab_path = '/home/hail09/package/mecab-0.996-ko-0.9.2/mecab-ko-dic-2.1.1-20180720'
     stopwords = '../stopwords/stopwordsKor.txt'
     input_file = '../data/ratings_train.txt'
 
     pipeline = ptm.Pipeline(ptm.splitter.NLTK(),
                             ptm.tokenizer.Komoran(),
+                            # ptm.tokenizer.MeCab(),
                             ptm.lemmatizer.SejongPOSLemmatizer(),
                             ptm.helper.SelectWordOnly(),
                             ptm.helper.StopwordFilter(file=stopwords))
@@ -40,7 +47,8 @@ elif mode == 'kr':
     i = 1
 
     #below is just for a sample test
-    for doc in result[1:2000]:
+
+    for doc in result[1:]:
         document = ''
         for sent in doc:
             for word in sent:
@@ -59,7 +67,9 @@ np.random.seed(RANDOM_SEED)
 torch.manual_seed(RANDOM_SEED)
 
 #we need a better way of setting MAX_LEN
-MAX_LEN = 160
+
+MAX_LEN = 256
+BATCH_SIZE = 16
 
 #split
 df_train, df_test = train_test_split(df, test_size=0.1, random_state=RANDOM_SEED)
@@ -72,7 +82,6 @@ tokenizer = None
 bert_model_name='monologg/kobert'
 tokenizer =get_korean_tokenizer(bert_model_name)
 
-BATCH_SIZE = 16
 train_data_loader = create_data_loader(df_train, tokenizer, MAX_LEN, BATCH_SIZE)
 val_data_loader = create_data_loader(df_val, tokenizer, MAX_LEN, BATCH_SIZE)
 test_data_loader = create_data_loader(df_test, tokenizer, MAX_LEN, BATCH_SIZE)
@@ -87,6 +96,7 @@ print(data['token_type_ids'].shape)
 print(data['targets'].shape)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(f'device setting:  {device}')
 
 classifier = 'transformers'
 if classifier == 'basic':
@@ -99,14 +109,15 @@ elif classifier == 'transformers':
 
 model = model.to(device)
 
-algorithm='transformers' #transformers or non_transformers
-torch_model_name='best_model_state.bin'
+algorithm = 'transformers' #transformers or non_transformers
+torch_model_name = 'best_model_state_3.bin'
 
 #BERT authors suggests epoch from 2 to 4
-num_epochs = 2
+num_epochs = 1
 trainer = PYBERTTrainer()
 trainer.train(model, device, train_data_loader, val_data_loader,
               df_val, df_train, tokenizer, num_epochs=num_epochs, algorithm=algorithm, torch_model_name=torch_model_name)
+trainer._save_history(path='./checkpoint/', file_name='model_history.pkl')
 
 trainer.summanry_training_stats()
 
